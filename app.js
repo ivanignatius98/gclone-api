@@ -7,9 +7,8 @@ const mongoose = require('mongoose')
 require('dotenv').config()
 
 // mongo configuration
-const mongoConnection = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}/${process.env.MONGODB_DB}`
 mongoose.connect(
-  mongoConnection,
+  process.env.MONGODB_URL,
   { useNewUrlParser: true, useUnifiedTopology: true },
   (errMongo) => {
     if (errMongo != null) {
@@ -72,6 +71,6 @@ app.use(function (err, req, res, next) {
 
 app.listen(process.env.PORT, () => {
   console.log("------------------------------------------------------")
-  console.log(`Mongo service running at http://localhost:${process.env.PORT}`)
+  console.log(`Finance services running at http://localhost:${process.env.PORT}`)
   console.log("------------------------------------------------------")
 })

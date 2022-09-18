@@ -3,41 +3,40 @@ const _ = require('lodash')
 const moment = require('moment')
 const jwt = require('jsonwebtoken')
 const User = require('../../models/user')
+const { verifyToken } = require("../../utils/helper")
 
+
+const tokenExpiration = 60 * 60
+const refreshExpiration = 60 * 60 * 24
 module.exports = {
-  createOrUpdate: async (req, res) => {
+  create: async (req, res) => {
     console.log(`┌─ ${LOG} : save user`);
     const payload = req.body
-    let whereClause = {}
-    let existingRecord = {}
-
-    payload.updated_at = moment()
-
-    if (payload._id != undefined) {
-      whereClause = {
-        _id: payload._id
-      }
-      existingRecord = await User.findOne(whereClause, '_id')
-      if (!existingRecord) {
-        return res.locals.helpers.jsonFormat(400, 'Invalid _id input', {})
-      }
-      await User.updateOne(whereClause, payload)
-    } else {
-      payload.created_at = moment()
+    Object.assign(payload, { updated_at: moment(), created_at: moment(), })
+    try {
       await User.create(payload)
+      return res.locals.helpers.jsonFormat(200, 'Success to save new user')
+    } catch ({ message }) {
+      return res.locals.helpers.jsonFormat(400, message, null)
     }
-    return res.locals.helpers.jsonFormat(200, 'Success to save new user', { existingRecord, whereClause })
   },
-  bulkCreate: async (req, res) => {
-    console.log(`┌─ ${LOG} : save bulk user`);
-    await User.insertMany(req.body.payload)
-    console.log(`└─ ${LOG} : save bulk user -> Success`);
-    return res.locals.helpers.jsonFormat(200, 'Success bulk save user')
+  update: async (req, res) => {
+    console.log(`┌─ ${LOG} : update user`);
+    const { oid } = req.params
+    const payload = req.body
+
+    const user = await User.findOne({ _id: oid }, '_id')
+    if (!user) {
+      return res.locals.helpers.jsonFormat(400, 'User not Found')
+    }
+    Object.assign(user, payload)
+    await user.save()
+    return res.locals.helpers.jsonFormat(200, 'Success to save user', {})
   },
   deleteOne: async (req, res) => {
-    const payload = req.body
-    const whereClause = { _id: payload._id }
-    await User.deleteOne(whereClause)
+    console.log(`┌─ ${LOG} : Delete user`);
+    const { oid } = req.params
+    await User.deleteOne({ _id: oid })
     return res.locals.helpers.jsonFormat(200, 'Success to delete user')
   },
   getAll: async (req, res) => {
@@ -58,11 +57,11 @@ module.exports = {
       }
       const fields = {
         _id: 1,
-        uid: 1,
         username: 1,
-        password: 1,
+        name: 1,
         email: 1,
-        refresh_token: 1
+        refresh_token: 1,
+        created_at: 1
       }
 
       // execute query
@@ -82,7 +81,7 @@ module.exports = {
   login: async (req, res) => {
     console.log(`┌─ ${LOG} : login`);
     const { username, email, password } = req.body
-    const user = await User.findOne({ $or: [{ username: username }, { email: email }] }, "_id username email password").exec()
+    const user = await User.findOne({ $or: [{ username: username }, { email: email }] }, "_id username email").exec()
     if (user == null) {
       return res.locals.helpers.jsonFormat(400, 'Invalid username / email')
     }
@@ -91,10 +90,10 @@ module.exports = {
       return res.locals.helpers.jsonFormat(400, 'Invalid password')
     }
     const token = jwt.sign(user.toJSON(), process.env.SECRET_KEY, {
-      expiresIn: 60 * 60
+      expiresIn: tokenExpiration
     })
     const refreshToken = jwt.sign({}, process.env.SECRET_KEY, {
-      expiresIn: 60 * 60 * 24
+      expiresIn: refreshExpiration
     })
     Object.assign(user, { refresh_token: refreshToken })
     user.save()
@@ -102,6 +101,18 @@ module.exports = {
     return res.locals.helpers.jsonFormat(200, 'Success login', { token, refreshToken })
   },
   refreshToken: async (req, res) => {
-    return res.locals.helpers.jsonFormat(200, 'Success refresh token', {})
+    console.log(`┌─ ${LOG} : refresh token`)
+    const { refreshToken } = req.body
+    const valid = await verifyToken(refreshToken)
+    if (!valid) {
+      return res.locals.helpers.jsonFormat(401, 'Unauthorized! Refresh Token was expired!')
+    }
+    const user = await User.findOne({ refreshToken }, '_id username email')
+    const newAccessToken = jwt.sign(user.toJSON(), process.env.SECRET_KEY, {
+      expiresIn: refreshExpiration,
+    })
+    Object.assign(user, { refresh_token: null })
+    user.save()
+    return res.locals.helpers.jsonFormat(200, 'Success refresh token', { token: newAccessToken })
   }
 }

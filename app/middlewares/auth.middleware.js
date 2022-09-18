@@ -1,13 +1,11 @@
 const jwt = require("jsonwebtoken")
-const { TokenExpiredError } = jwt
 
 const catchError = (err, res) => {
-  if (err instanceof TokenExpiredError) {
+  if (err instanceof jwt.TokenExpiredError) {
     return res.locals.helpers.jsonFormat(401, 'Unauthorized! Access Token was expired!')
   }
   return res.locals.helpers.jsonFormat(401, 'Unauthorized!')
 }
-
 module.exports = {
   verifyToken: (req, res, next) => {
     let token = req.headers["x-access-token"]
@@ -18,7 +16,7 @@ module.exports = {
       if (err) {
         return catchError(err, res)
       }
-      req.userId = decoded.id
+      req.userId = decoded._id
       next()
     })
   }
