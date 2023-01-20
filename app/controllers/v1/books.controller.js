@@ -59,9 +59,12 @@ module.exports = {
         .limit(limit)
         .skip(skip)
         .lean()
-        .exec();
-      return res.locals.helpers.jsonFormat(200, 'Success get all book', { records })
+        .exec()
+      const count = await Book.find(conditions).countDocuments()
+
+      return res.locals.helpers.jsonFormat(200, 'Success get all book', { records, count })
     } catch (error) {
+      console.log(error)
       return res.locals.helpers.jsonFormat(200, 'error', error)
     }
   },
