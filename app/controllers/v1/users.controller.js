@@ -2,7 +2,7 @@ const LOG = 'UserController';
 const _ = require('lodash')
 const moment = require('moment')
 const jwt = require('jsonwebtoken')
-const User = require('../../models/user')
+const User = require('../../models/User')
 const { verifyToken } = require("../../utils/helper")
 
 
