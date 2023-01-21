@@ -50,20 +50,40 @@ module.exports = {
         const searchRegex = new RegExp(search, 'i')
         conditions = { title: searchRegex }
       }
-      const fields = {}
+      const fields = "-cover -description"
 
       // execute query
       const records = await Book.find(conditions)
-        .select(fields)
         .sort({ "updated_at": -1, "_id": -1 })
-        .populate("author", "name")
+        .select(fields)
         .limit(limit)
         .skip(skip)
         .lean()
+        .populate("author", "name")
         .exec()
       const count = await Book.find(conditions).countDocuments()
 
       return res.locals.helpers.jsonFormat(200, 'Success get all book', { records, count })
+    } catch (error) {
+      console.log(error)
+      return res.locals.helpers.jsonFormat(200, 'error', error)
+    }
+  },
+  detail: async (req, res) => {
+    try {
+      console.log(`┌─ ${LOG} : book detail`);
+      const { oid } = req.params
+
+      const book = await Book
+        .findOne({ _id: oid })
+        .populate("author")
+        .lean()
+        .exec()
+      if (!book) {
+        return res.locals.helpers.jsonFormat(400, 'Book not Found')
+      }
+
+      return res.locals.helpers.jsonFormat(200, 'Success get book detail', { record: book })
     } catch (error) {
       console.log(error)
       return res.locals.helpers.jsonFormat(200, 'error', error)
