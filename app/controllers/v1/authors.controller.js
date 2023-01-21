@@ -48,7 +48,7 @@ module.exports = {
       let conditions = {}
       if (search != '') {
         const searchRegex = new RegExp(search, 'i')
-        conditions = { title: searchRegex }
+        conditions = { name: searchRegex }
       }
       const fields = {}
 
