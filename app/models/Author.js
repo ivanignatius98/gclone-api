@@ -13,6 +13,6 @@ const authorSchema = new mongoose.Schema({
   },
   updated_at: Date,
 })
-const AuthorModel = mongoose.model('authors', authorSchema)
+const AuthorModel = mongoose.model('Author', authorSchema)
 
 module.exports = AuthorModel

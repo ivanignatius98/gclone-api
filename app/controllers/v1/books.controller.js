@@ -56,6 +56,7 @@ module.exports = {
       const records = await Book.find(conditions)
         .select(fields)
         .sort({ "updated_at": -1, "_id": -1 })
+        .populate("author", "name")
         .limit(limit)
         .skip(skip)
         .lean()

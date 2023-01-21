@@ -11,6 +11,6 @@ const bookSchema = new mongoose.Schema({
   },
   updated_at: Date,
 });
-const BookModel = mongoose.model('books', bookSchema);
+const BookModel = mongoose.model('Book', bookSchema);
 
 module.exports = BookModel;

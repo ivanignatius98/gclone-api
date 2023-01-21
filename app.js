@@ -4,6 +4,8 @@ const bodyParser = require('body-parser')
 const helperUtils = require('./app/utils/helper')
 const userRouter = require('./app/routes/v1/user')
 const booksRouter = require('./app/routes/v1/book')
+const authorRouter = require('./app/routes/v1/author')
+
 const mongoose = require('mongoose')
 require('dotenv').config()
 
@@ -41,6 +43,7 @@ app.use((req, res, next) => {
 
 app.use('/api/v1', userRouter)
 app.use('/api/v1', booksRouter)
+app.use('/api/v1', authorRouter)
 
 app.get('/404', function (req, res, next) {
   next();
