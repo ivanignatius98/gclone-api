@@ -5,6 +5,7 @@ const bookSchema = new mongoose.Schema({
   description: String,
   cover: String,
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'Author' },
+  categories: [String],
   created_at: {
     type: Date,
     default: Date.now
